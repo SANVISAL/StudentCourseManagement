@@ -5,7 +5,6 @@ import { Student } from "../database,/model/student.model";
 import { StatusCode } from "../utils/const/status-code";
 import { createCourseSchema } from "../middleware/schema/createCourseSchema";
 import { zodValidator } from "../middleware/zod-validation";
-import { nextTick } from "process";
 
 const courseRoute = express.Router();
 const courseController = new CourseController();
@@ -20,7 +19,7 @@ courseRoute.post(
       if (result === null) {
         return res
           .status(StatusCode.BadRequest)
-          .json({ message: "Invalid Data." }); // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.  // 404 Not Found status code if course not found.
+          .json({ message: "Invalid Data." });
       } else {
         res.status(StatusCode.Created).json(result);
       }
