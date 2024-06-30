@@ -1,20 +1,21 @@
 # 🎓 Student Course Management System
 
-This project implements a **Student Course Management system** using **Express**, **Node.js**, and **MongoDB**. It provides APIs for managing students and courses, with features like search, registration, and reporting.
+This project implements a **Student Course Management system** using **Express**, **Node.js**, **MongoDB**, and **Jest**. It provides APIs for managing students and courses, with features like search, registration, and reporting.
 
 ---
 
-## <span style="color: #6D4C41;">🚀 Tech Stack</span>
+## 🚀 Tech Stack
 
-- <span style="color: #EF6C00;">**Express**</span>: Node.js web application framework
-- <span style="color: #FF8A65;">**Node.js**</span>: JavaScript runtime
-- <span style="color: #FFB74D;">**MongoDB**</span>: NoSQL database for storing student and course data
+- **Express**: Node.js web application framework
+- **Node.js**: JavaScript runtime
+- **MongoDB**: NoSQL database for storing student and course data
+- **Jest**: JavaScript testing framework
 
 ---
 
-## <span style="color: #8E24AA;">📚 Database Design</span>
+## 📚 Database Design
 
-### <span style="color: #BA68C8;">Collections</span>
+### Collections
 
 1. **Students**
    - Full name (both English and Khmer)
@@ -31,35 +32,46 @@ This project implements a **Student Course Management system** using **Express**
    - End date
    - Soft delete functionality
 
-### <span style="color: #9C27B0;">Relationships</span>
+### Relationships
 
 - Students can register for multiple courses.
 - Courses can have multiple registered students.
 
 ---
 
-## <span style="color: #43A047;">✨ Features</span>
+## ✨ Features
 
-1. **Student API**
-   - CRUD operations with soft delete
-   - Free-text search by Full name or phone number
+### Student API
 
-2. **Course API**
-   - CRUD operations with soft delete
-   - Free-text search by Name
-   - Advanced search filter by start date and end date
+- CRUD operations with soft delete
+- Free-text search by Full name or phone number
+- **Endpoints:**
+  - Create a Student: [POST /v1/students](http://localhost:4000/v1/students)
+  - Get All Students: [GET /v1/students](http://localhost:4000/v1/students)
+  - Update a Student: [PUT /v1/students/{studentId}](http://localhost:4000/v1/students/667c4afc47df851a4411a633)
+  - Delete a Student: [DELETE /v1/students/{studentId}](http://localhost:4000/v1/students/667d437e9504256c9369b0e0)
 
-3. **Registration**
-   - Register and remove courses for students
+### Course API
 
-4. **Reporting**
-   - API endpoints to generate reports:
-     - Course report: Course name, professor, start date, end date, limit number of students, number of registered students
-     - Student report: Student full name, date of birth, gender, phone number, number of courses registered
+- CRUD operations with soft delete
+- Free-text search by Name
+- Advanced search filter by start date and end date
+- **Endpoint:** [GET /api/courses](#)
+
+### Registration
+
+- Register and remove courses for students
+- **Endpoint:** [POST /api/students/{studentId}/courses/{courseId}](#)
+
+### Reporting
+
+- API endpoints to generate reports:
+  - Course report: Course name, professor, start date, end date, limit number of students, number of registered students
+  - Student report: Student full name, date of birth, gender, phone number, number of courses registered
 
 ---
 
-## <span style="color: #1E88E5;">🛠️ Setup and Installation</span>
+## 🛠️ Setup and Installation
 
 1. **Clone the repository**:
    ```bash
