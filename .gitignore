@@ -1,0 +1,26 @@
+# Node.js specific
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Dependency directories
+/dist/
+/out/
+/build/
+
+# Environment variables
+.env
+
+# Editor specific files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log.txt
