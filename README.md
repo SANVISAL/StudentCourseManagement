@@ -63,5 +63,5 @@ This project implements a **Student Course Management system** using **Express**
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/SANVISAL/StudentCourseManagement.git>
    cd student-course-management

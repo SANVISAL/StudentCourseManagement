@@ -15,7 +15,8 @@ describe("StudentRepository - Unit Test", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks(); // Restore all mocked functions after each test
+    studentRepo = new StudentRepository();
+    jest.clearAllMocks();  // Restore all mocked functions after each test
   });
 
   test("should add new student profile to database", async () => {
@@ -42,7 +43,7 @@ describe("StudentRepository - Unit Test", () => {
     // Assertions
     expect(result).toBeDefined();
     expect(result.message).toEqual("Student created successfully");
-    expect(result.data.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
+    expect(result.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
     expect(saveMock).toHaveBeenCalled(); // Ensure save method was called
   });
 
