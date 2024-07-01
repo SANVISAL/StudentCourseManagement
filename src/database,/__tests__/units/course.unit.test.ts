@@ -34,17 +34,88 @@ describe("Course repository unit test", () => {
           ...MOCK_DATA,
           _id: new mongoose.Types.ObjectId(),
         };
-  
+
         // Mock the save method on Course prototype
         (Course.prototype.save as jest.Mock).mockResolvedValue(savedCourse);
-  
+
         const newCourse = await courseRepo.createCourse(MOCK_DATA);
-  
+
         expect(newCourse).toBeDefined();
         expect(newCourse.data.Name).toEqual(MOCK_DATA.Name);
         expect(newCourse.data.startDate).toEqual(MOCK_DATA.startDate);
         expect(Course.prototype.save).toHaveBeenCalledTimes(1);
       });
+
+    // test("should create a new course successfully", async () => {
+    //   const MOCK_DATA: ICreateCourse = {
+    //     Name: "course name",
+    //     professorName: "test name",
+    //     numberOfStudents: 10,
+    //     startDate: "test sdate",
+    //     endDate: "test edate",
+    //   };
+
+    //   const savedCourse = {
+    //     _id: "mocked_id",
+    //     ...MOCK_DATA,
+    //   };
+
+    //   (Course.prototype.save as jest.Mock).mockResolvedValue(savedCourse);
+
+    //   const result = await courseRepo.createCourse(MOCK_DATA);
+
+    //   expect(result).toBeDefined();
+    //   expect(result.message).toEqual("Course created successfully");
+    //   expect(result.data.Name).toEqual(MOCK_DATA.Name);
+
+    //   // Verify the course was saved in the database
+    //   const savedCourseFromDB = await Course.findOne({ name: MOCK_DATA.Name });
+    //   expect(savedCourseFromDB).toBeDefined();
+    //   expect(savedCourseFromDB.Name).toEqual(MOCK_DATA.Name);
+    //   expect(savedCourseFromDB.startDate).toEqual(MOCK_DATA.startDate);
+    //   expect(savedCourseFromDB.endDate).toEqual(MOCK_DATA.endDate);
+    // });
+
+    // test("should throw an error if course details are invalid", async () => {
+    //   const INVALID_DATA = {
+    //     name: "",
+    //     professorName: "test name",
+    //     numberOfStudents: 10,
+    //     startDate: "test sdate",
+    //     endDate: "test edate",
+    //   };
+
+    //   await expect(
+    //     courseRepo.createCourse(INVALID_DATA as any)
+    //   ).rejects.toThrow("Invalid course details");
+
+    //   // Ensure no course was saved in the database
+    //   const savedCourse = await Course.findOne({ name: INVALID_DATA.name });
+    //   expect(savedCourse).toBeNull();
+    // });
+
+    // test("should throw an error if saving the course fails", async () => {
+    //   const MOCK_DATA: ICreateCourse = {
+    //     Name: "course name",
+    //     professorName: "test name",
+    //     numberOfStudents: 10,
+    //     startDate: "test sdate",
+    //     endDate: "test edate",
+    //   };
+
+    //   // Mock the save method to simulate a failure
+    //   jest.spyOn(Course.prototype, "save").mockImplementationOnce(() => {
+    //     throw new Error("Database error");
+    //   });
+
+    //   await expect(courseRepo.createCourse(MOCK_DATA)).rejects.toThrow(
+    //     "Unexpected error occurred while creating course"
+    //   );
+
+    //   // Ensure no course was saved in the database
+    //   const savedCourse = await Course.findOne({ name: MOCK_DATA.Name});
+    //   expect(savedCourse).toBeNull();
+    // });
   });
 
   describe("Get all courses", () => {

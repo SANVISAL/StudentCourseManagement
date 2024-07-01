@@ -1,9 +1,13 @@
-import { error } from "console";
+
 import { Student } from "../model/student.model";
 import {
   ICreateStudent,
   IUpdateStudent,
 } from "./@types/student.repository.type";
+// import DuplicateError from "../../errors/duplicate-error";
+// import { ApiError } from "../../errors/Api-error";
+// import { logger } from "../../utils/logger";
+// import DuplicateError from "../../errors/duplicate-error";
 
 class StudentRepository {
   //==================================
@@ -23,7 +27,10 @@ class StudentRepository {
         throw new Error("Student Already Exist");
       } else {
         const student = new Student(studentDetails);
-        await student.save();
+        const newStudent = await student.save();
+        if (!newStudent){
+          throw new Error("Error creating student");
+        }
         return { message: "Student created successfully", data: student };
       }
     } catch (error) {
@@ -40,6 +47,40 @@ class StudentRepository {
       throw err;
     }
   }
+
+  // async createStudent(studentDetails: ICreateStudent) {
+  //   try {
+  //     const studentRequest = await this.findByPhoneNumber(
+  //       studentDetails.phoneNumber
+  //     );
+  //     if (studentRequest) {
+  //       throw new DuplicateError("Student Already Exist");
+  //     } else {
+  //       const student = new Student(studentDetails);
+  //       const newStudent = await student.save();
+  //       if (!newStudent) {
+  //         throw new ApiError("Error creating student");
+  //       }
+  //       return { message: "Student created successfully", data: student };
+  //     }
+  //   } catch (error) {
+  //     logger.error(`An error occurred in create(): ${error}`);
+  //     if (error instanceof ApiError || error instanceof DuplicateError) {
+  //       throw error;
+  //     }
+  //     throw new ApiError("Unexpected error occurred while creating student");
+  //   }
+  // }
+
+  // async findByPhoneNumber(phoneNumber: string) {
+  //   try {
+  //     const student = await Student.findOne({ phoneNumber: phoneNumber });
+  //     return student; // Return the student or null if not found
+  //   } catch (err) {
+  //     console.log("Student Repository Find By Phone:", err);
+  //     throw err;
+  //   }
+  // }
   async getAllStudnet() {
     try {
       const student = await Student.find({ isDeleted: false });

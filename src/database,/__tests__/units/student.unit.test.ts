@@ -6,6 +6,8 @@ import {
   IUpdateStudent,
 } from "../../repository/@types/student.repository.type";
 import { Student } from "../../model/student.model";
+// import { ApiError } from "../../../errors/Api-error";
+// import DuplicateError from "../../../errors/duplicate-error";
 
 describe("StudentRepository - Unit Test", () => {
   let studentRepo: StudentRepository;
@@ -46,6 +48,97 @@ describe("StudentRepository - Unit Test", () => {
     expect(result.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
     expect(saveMock).toHaveBeenCalled(); // Ensure save method was called
   });
+
+  // test("should add new student profile to database", async () => {
+  //   const MOCK_DATA: ICreateStudent = {
+  //     fullNameEn: "John Doe",
+  //     fullNameKh: "សាន​ វិសាល",
+  //     dateOfBirth: "1990-01-01",
+  //     gender: "Male",
+  //     phoneNumber: "1234567890",
+  //   };
+
+  //   const savedStudent = {
+  //     _id: "mocked_id",
+  //     ...MOCK_DATA,
+  //   };
+
+  //   // Mock the findByPhoneNumber method to return null (indicating no existing student)
+  //   jest.spyOn(studentRepo, "findByPhoneNumber").mockResolvedValue(null);
+
+  //   // Mock the save method of the Student model to simulate saving in-memory without hitting the database
+  //   const saveMock = jest.spyOn(Student.prototype, "save").mockResolvedValue(savedStudent as any);
+
+  //   const result = await studentRepo.createStudent(MOCK_DATA);
+
+  //   // Assertions
+  //   expect(result).toBeDefined();
+  //   expect(result.message).toEqual("Student created successfully");
+  //   expect(result.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
+  //   expect(result.data.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
+  //   expect(saveMock).toHaveBeenCalled(); // Ensure save method was called
+  // });
+
+  // test("should not create a student with existing phone number", async () => {
+  //   const MOCK_DATA: ICreateStudent = {
+  //     fullNameEn: "John Doe",
+  //     fullNameKh: "សាន​ វិសាល",
+  //     dateOfBirth: "1990-01-01",
+  //     gender: "Male",
+  //     phoneNumber: "1234567890",
+  //   };
+
+  //   // Mock the findByPhoneNumber method to return an existing student
+  //   jest.spyOn(studentRepo, "findByPhoneNumber").mockResolvedValue(MOCK_DATA as any);
+
+  //   // Mock the save method of the Student model
+  //   const saveMock = jest.spyOn(Student.prototype, "save");
+
+  //   await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(DuplicateError);
+
+  //   // Ensure findByPhoneNumber was called and save was not called
+  //   expect(saveMock).not.toHaveBeenCalled();
+  // });
+
+  // test("should throw ApiError when save fails", async () => {
+  //   const MOCK_DATA: ICreateStudent = {
+  //     fullNameEn: "Jane Doe",
+  //     fullNameKh: "ជេន ដូ",
+  //     dateOfBirth: "1995-05-05",
+  //     gender: "Female",
+  //     phoneNumber: "0987654321",
+  //   };
+
+  //   // Mock the findByPhoneNumber method to return null (indicating no existing student)
+  //   jest.spyOn(studentRepo, "findByPhoneNumber").mockResolvedValue(null);
+
+  //   // Mock the save method of the Student model to simulate a save failure
+  //   const saveMock = jest.spyOn(Student.prototype, "save").mockResolvedValue(null);
+
+  //   await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(ApiError);
+
+  //   // Ensure save method was called
+  //   expect(saveMock).toHaveBeenCalled();
+  // });
+
+  // test("should throw ApiError for unexpected errors", async () => {
+  //   const MOCK_DATA: ICreateStudent = {
+  //     fullNameEn: "Jane Doe",
+  //     fullNameKh: "ជេន ដូ",
+  //     dateOfBirth: "1995-05-05",
+  //     gender: "Female",
+  //     phoneNumber: "0987654321",
+  //   };
+
+  //   // Mock the findByPhoneNumber method to throw an error
+  //   const findByPhoneNumberMock = jest.spyOn(studentRepo, "findByPhoneNumber").mockRejectedValue(new Error("Unexpected error"));
+
+  //   await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(ApiError);
+
+  //   // Ensure findByPhoneNumber was called
+  //   expect(findByPhoneNumberMock).toHaveBeenCalledWith(MOCK_DATA.phoneNumber);
+  // });
+
 
   test("should return all students from database", async () => {
     const MOCK_DATA: ICreateStudent[] = [
@@ -155,5 +248,46 @@ describe("StudentRepository - Unit Test", () => {
     await expect(
       studentRepo.updateStudent(INVALID_ID, UPDATE_DATA)
     ).rejects.toThrow("Invalid Student ID");
+  });
+  test("should find students by name in the database", async () => {
+    const MOCK_DATA: ICreateStudent[] = [
+      {
+        fullNameEn: "Jane john",
+        fullNameKh: "សាន​ វិសាល",
+        dateOfBirth: "1990-01-01",
+        gender: "Male",
+        phoneNumber: "0987654320",
+      },
+      {
+        fullNameEn: "Jane Smith",
+        fullNameKh: "testname",
+        dateOfBirth: "1990-02-01",
+        gender: "Male",
+        phoneNumber: "0987654321",
+      },
+    ];
+
+    // Mock the find method of the Student model to simulate students found in the database
+    (Student.find as jest.Mock).mockResolvedValue(MOCK_DATA);
+
+    const searchName = "Jane Smith";
+    const foundStudents = await studentRepo.findByName(searchName);
+
+    // Assertions
+    expect(foundStudents).toBeDefined();
+    expect(foundStudents.length).toBeGreaterThan(0);
+      expect(foundStudents).toEqual(expect.arrayContaining([expect.objectContaining({ fullNameEn: searchName })]));
+    expect(Student.find).toHaveBeenCalledTimes(1);
+  });
+  test("should throw an error if no students found with the given name", async () => {
+    const INVALID_NAME = "Nonexistent Name";
+
+    // Mock the find method of the Student model to simulate no students found in the database
+    (Student.find as jest.Mock).mockResolvedValue([]);
+
+    await expect(studentRepo.findByName(INVALID_NAME)).rejects.toThrow("Student Not Found");
+
+    // Ensure find method was called
+    expect(Student.find).toHaveBeenCalledTimes(1);
   });
 });

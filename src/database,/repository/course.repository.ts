@@ -1,4 +1,6 @@
-import { ICourse } from "../model/@types/course.types";
+// import { ApiError } from "../../errors/Api-error";
+// import { logger } from "../../utils/logger";
+// import { ICourse } from "../model/@types/course.types";
 import { Course } from "../model/course.model";
 import { ICreateCourse, IUpdateCourse } from "./@types/course.repository.type";
 
@@ -19,6 +21,30 @@ class CourseRepository {
       throw error;
     }
   }
+
+  // async createCourse(courseDetails: ICreateCourse) {
+  //   try {
+  //     // Input validation (can use a library like Joi or Zod)
+  //     if (!courseDetails.Name || !courseDetails.startDate || !courseDetails.endDate) {
+  //       throw new ApiError("Invalid course details");
+  //     }
+
+  //     const course = new Course(courseDetails);
+  //     const newCourse = await course.save();
+
+  //     if (!newCourse) {
+  //       throw new ApiError("Error creating course");
+  //     }
+
+  //     return { message: "Course created successfully", data: newCourse };
+  //   } catch (error) {
+  //     logger.error("CourseRepository:", error); // Better logging with logger
+  //     if (error instanceof ApiError) {
+  //       throw error; // Rethrow known errors
+  //     }
+  //     throw new ApiError("Unexpected error occurred while creating course");
+  //   }
+  // }
 
   async getAllCourses() {
     try {

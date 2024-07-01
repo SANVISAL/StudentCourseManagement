@@ -4,8 +4,9 @@ import {
   ICreateStudent,
   IUpdateStudent,
 } from "../../repository/@types/student.repository.type"; // Adjust the path to your interfaces
+// import DuplicateError from "../../../errors/duplicate-error";
 
-jest.mock('../../model/student.model');
+jest.mock("../../model/student.model");
 
 describe("Student repository unit test", () => {
   let studentRepo: StudentRepository;
@@ -56,6 +57,47 @@ describe("Student repository unit test", () => {
       );
     });
   });
+
+  // describe('createStudent', () => {
+  //   test('should add new student profile to database', async () => {
+  //     const MOCK_DATA: ICreateStudent = {
+  //       fullNameEn: 'John Doe',
+  //       fullNameKh: 'សាន​ វិសាល',
+  //       dateOfBirth: '1990-01-01',
+  //       gender: 'Male',
+  //       phoneNumber: '1234567890',
+  //     };
+
+  //     const result = await studentRepo.createStudent(MOCK_DATA);
+
+  //     expect(result).toBeDefined();
+  //     expect(result.message).toEqual('Student created successfully');
+  //     expect(result.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
+
+  //     const studentInDb = await Student.findOne({ phoneNumber: MOCK_DATA.phoneNumber });
+  //     expect(studentInDb).not.toBeNull();
+  //     expect(studentInDb.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
+  //   });
+
+  //   test('should not create a student with existing phone number', async () => {
+  //     const MOCK_DATA: ICreateStudent = {
+  //       fullNameEn: 'John Doe',
+  //       fullNameKh: 'សាន​ វិសាល',
+  //       dateOfBirth: '1990-01-01',
+  //       gender: 'Male',
+  //       phoneNumber: '1234567890',
+  //     };
+
+  //     // Pre-insert a student with the same phone number
+  //     const existingStudent = new Student(MOCK_DATA);
+  //     await existingStudent.save();
+
+  //     await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(DuplicateError);
+
+  //     const studentCount = await Student.countDocuments({ phoneNumber: MOCK_DATA.phoneNumber });
+  //     expect(studentCount).toBe(1); // Ensure only one student exists with the given phone number
+  //   });
+  // });
 
   describe("Get all students", () => {
     test("should return all students from database", async () => {
@@ -258,9 +300,7 @@ describe("Student repository unit test", () => {
 
       expect(foundStudent).toBeDefined();
       expect(foundStudent?.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
-      expect(foundStudent?._id as string).toEqual(
-        savedStudent._id as string
-      );
+      expect(foundStudent?._id as string).toEqual(savedStudent._id as string);
       expect(Student.findById).toHaveBeenCalledTimes(1);
     });
 
