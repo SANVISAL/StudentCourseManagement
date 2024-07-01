@@ -28,6 +28,7 @@
     ],
     "types": [
       "node",
-      "express"
+      "express",
+       "jest"
     ]
   }

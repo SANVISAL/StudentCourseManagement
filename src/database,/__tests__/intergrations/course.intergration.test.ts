@@ -324,7 +324,7 @@ describe("Course repository integration test", () => {
     });
 
     test("should throw an error if the student ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
+      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId should
 
       await expect(courseRepo.findById(INVALID_ID)).rejects.toThrow(
         "Course Not Found"

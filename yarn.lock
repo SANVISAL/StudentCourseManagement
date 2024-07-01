@@ -743,11 +743,6 @@
   resolved "https://registry.npmjs.org/@types/mime/-/mime-1.3.5.tgz"
   integrity sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==
 
-"@types/mocha@^10.0.7":
-  version "10.0.7"
-  resolved "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.7.tgz"
-  integrity sha512-GN8yJ1mNTcFcah/wKEFIJckJx9iJLoMSzWcfRRuxz/Jk+U6KQNnml+etbtxFK8lPjzOw3zp4Ha/kjSst9fsHYw==
-
 "@types/mongoose@^5.11.97":
   version "5.11.97"
   resolved "https://registry.npmjs.org/@types/mongoose/-/mongoose-5.11.97.tgz"
