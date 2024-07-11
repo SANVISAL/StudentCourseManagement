@@ -1,6 +1,8 @@
-// import { ApiError } from "../../errors/Api-error";
-// import { logger } from "../../utils/logger";
-// import { ICourse } from "../model/@types/course.types";
+import {
+  ApiError,
+  MissingReqirement,
+  NotFoundError,
+} from "../../errors/api-error";
 import { Course } from "../model/course.model";
 import { ICreateCourse, IUpdateCourse } from "./@types/course.repository.type";
 
@@ -13,12 +15,23 @@ class CourseRepository {
   // methods to perform CRUD operations on courses
   async createCourse(courseDetails: ICreateCourse) {
     try {
+      if (!courseDetails.Name || !courseDetails.professorName) {
+        throw new MissingReqirement("Missing required student details");
+      }
+
       const course = new Course(courseDetails);
-      await course.save();
-      return { message: "Course created successfully", data: course };
-    } catch (error) {
-      console.log("CourseRepository:", error);
-      throw error;
+      const newCourse = await course.save();
+      if (!newCourse) {
+        throw new ApiError("Course Creation Failed");
+      } else {
+        return { message: "Course created successfully", data: course };
+      }
+    } catch (err) {
+      console.log("CourseRepository:", err);
+      if (err instanceof ApiError || err instanceof MissingReqirement) {
+        throw err;
+      }
+      throw new ApiError("Unexpected error occurred while creating course");
     }
   }
 
@@ -53,11 +66,14 @@ class CourseRepository {
       if (course.length !== 0) {
         return course;
       } else {
-        throw new Error("Course Not Found");
+        throw new NotFoundError("Course Not Found");
       }
     } catch (err) {
       console.log("Course Repository:", err);
-      throw err;
+      if (err instanceof NotFoundError) {
+        throw err; // Rethrow known errors
+      }
+      throw new ApiError("Unexpected error occurred while");
     }
   }
   async updateCourse(id: string, courseDetails: IUpdateCourse) {
@@ -70,11 +86,14 @@ class CourseRepository {
         });
         return updatecourse;
       } else {
-        throw new Error("Invalid Course ID");
+        throw new ApiError("Invalid Course ID");
       }
     } catch (err) {
       console.log("Update Course Repository:", err);
-      throw err;
+      if (err instanceof ApiError) {
+        throw err; // Rethrow known errors
+      }
+      throw new ApiError("Unexpected error occurred while update course");
     }
   }
   async deleteCourse(id: string) {
@@ -91,10 +110,13 @@ class CourseRepository {
         );
         return deleteCourse;
       } else {
-        throw new Error("Invalid Course ID To Delete");
+        throw new ApiError("Invalid Course ID To Delete");
       }
     } catch (err) {
-      throw err;
+      if (err instanceof ApiError) {
+        throw err; // Rethrow known
+      }
+      throw new ApiError("Unexpected error occurred while delete course");
     }
   }
   async findByName(name: string) {
@@ -108,11 +130,14 @@ class CourseRepository {
       if (course.length > 0) {
         return course;
       } else {
-        throw new Error("Course Not Found");
+        throw new NotFoundError("Course Not Found");
       }
     } catch (err) {
       console.log("course Repository:", err);
-      throw err;
+      if (err instanceof ApiError) {
+        throw err; // Rethrow known errors
+      }
+      throw new ApiError("Unexpected error occurred while find course");
     }
   }
 
@@ -129,24 +154,30 @@ class CourseRepository {
     try {
       const course = await Course.find(query);
       if (course == null || course.length === 0) {
-        throw new Error("Course Not Found");
+        throw new NotFoundError("Course Not Found");
       } else {
         return course;
       }
     } catch (err: any) {
-      throw err;
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      throw new ApiError("Unexpected error occurred while filter");
     }
   }
   async findById(id: string) {
     try {
       const course = await Course.findById(id);
       if (course == null) {
-        throw new Error("Course Not Found");
+        throw new NotFoundError("Course Not Found");
       } else {
         return course;
       }
     } catch (err) {
-      throw err;
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      throw new ApiError("Unexpected error occurred while find course");
     }
   }
 }

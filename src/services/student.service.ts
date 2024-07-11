@@ -18,12 +18,12 @@ class StudentService {
       return student;
     } catch (err) {
       console.log(err);
-      throw new Error();
+      throw err;
     }
   }
   async getAllStudent() {
     try {
-      return await this.studentRepository.getAllStudnet();
+      return await this.studentRepository.getAllStudents();
     } catch (err) {
       throw err;
     }

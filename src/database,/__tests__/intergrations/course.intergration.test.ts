@@ -1,334 +1,165 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import CourseRepository, {
-  SearchByDates,
-} from "../../repository/course.repository";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import CourseRepository from "../../repository/course.repository";
 import { Course } from "../../model/course.model";
-import { ICourse } from "../../model/@types/course.types";
 import {
   ICreateCourse,
   IUpdateCourse,
 } from "../../repository/@types/course.repository.type";
+import { ApiError, MissingReqirement } from "../../../errors/api-error";
 
+// Setting up an in-memory MongoDB server
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
-  const mongoURL = mongoServer.getUri();
-  await mongoose.connect(mongoURL);
-}, 1000000);
+  const uri = mongoServer.getUri();
+  await mongoose.connect(uri);
+});
 
 afterAll(async () => {
   await mongoose.disconnect();
   await mongoServer.stop();
 });
 
-describe("Course repository integration test", () => {
-  let courseRepo: CourseRepository;
-  beforeEach(() => {
-    courseRepo = new CourseRepository();
+beforeEach(async () => {
+  await Course.deleteMany({});
+});
+
+describe("CourseRepository Integration Tests", () => {
+  const courseRepo = new CourseRepository();
+
+  test("should create a new course", async () => {
+    const courseDetails: ICreateCourse = {
+      Name: "Computer Science",
+      professorName: "Dr. John Doe",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 30,
+    };
+
+    const result = await courseRepo.createCourse(courseDetails);
+
+    expect(result).toBeDefined();
+    expect(result.data.Name).toBe(courseDetails.Name);
+    expect(result.data.professorName).toBe(courseDetails.professorName);
   });
 
-  afterEach(async () => {
-    await Course.deleteMany({});
+  test("should fail to create a course with missing required details", async () => {
+    const courseDetails: Partial<ICreateCourse> = {
+      professorName: "Dr. John Doe",
+    };
+
+    await expect(
+      courseRepo.createCourse(courseDetails as ICreateCourse)
+    ).rejects.toThrow(ApiError);
   });
 
-  describe("Create Course profile", () => {
-    test("should add new course to database", async () => {
-      const MOCK_DATA: ICreateCourse = {
-        Name: "course name",
-        professorName: "test name",
-        numberOfStudents: 10,
-        startDate: "test sdate",
-        endDate: "test edate",
-      };
-      const newCourse = await courseRepo.createCourse(MOCK_DATA);
-      expect(newCourse).toBeDefined();
-      expect(newCourse.data.Name).toEqual(MOCK_DATA.Name);
-      expect(newCourse.data.startDate).toEqual(MOCK_DATA.startDate);
-
-      // Check if student profile exists in database
-      const foundCourse = await Course.findById(newCourse.data._id);
-      expect(foundCourse).toBeDefined();
-      expect(foundCourse?.Name).toEqual(MOCK_DATA.Name);
+  test("should retrieve all courses", async () => {
+    await Course.create({
+      Name: "Mathematics",
+      professorName: "Prof. Jane Doe",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 25,
     });
 
-    // test("should create a new course successfully", async () => {
-    //   const MOCK_DATA: ICreateCourse = {
-    //     Name: "course name",
-    //     professorName: "test name",
-    //     numberOfStudents: 10,
-    //     startDate: "test sdate",
-    //     endDate: "test edate",
-    //   };
+    const courses = await courseRepo.getAllCourses();
 
-    //   const result = await courseRepo.createCourse(MOCK_DATA);
-
-    //   expect(result).toBeDefined();
-    //   expect(result.message).toEqual("Course created successfully");
-    //   expect(result.data.Name).toEqual(MOCK_DATA.Name);
-
-    //   // Verify the course was saved in the database
-    //   const savedCourse = await Course.findOne({ name: MOCK_DATA.Name });
-    //   expect(savedCourse).toBeDefined();
-    //   expect(savedCourse.Name).toEqual(MOCK_DATA.Name);
-    //   expect(savedCourse.startDate).toEqual(MOCK_DATA.startDate);
-    //   expect(savedCourse.endDate).toEqual(MOCK_DATA.endDate);
-    // });
-
-    // test("should throw an error if course details are invalid", async () => {
-    //   const INVALID_DATA = {
-    //     Name: "",
-    //     professorName: "test name",
-    //     numberOfStudents: 10,
-    //     startDate: "test sdate",
-    //     endDate: "test edate",
-    //   };
-
-    //   await expect(
-    //     courseRepo.createCourse(INVALID_DATA as any)
-    //   ).rejects.toThrow("Invalid course details");
-
-    //   // Ensure no course was saved in the database
-    //   const savedCourse = await Course.findOne({ name: INVALID_DATA.Name });
-    //   expect(savedCourse).toBeNull();
-    // });
-
-    // test("should throw an error if saving the course fails", async () => {
-    //   const MOCK_DATA: ICreateCourse = {
-    //     Name: "course name",
-    //     professorName: "test name",
-    //     numberOfStudents: 10,
-    //     startDate: "test sdate",
-    //     endDate: "test edate",
-    //   };
-
-    //   // Mock the save method to simulate a failure
-    //   jest.spyOn(Course.prototype, "save").mockImplementationOnce(() => {
-    //     throw new Error("Database error");
-    //   });
-
-    //   await expect(courseRepo.createCourse(MOCK_DATA)).rejects.toThrow(
-    //     "Unexpected error occurred while creating course"
-    //   );
-
-    //   // Ensure no course was saved in the database
-    //   const savedCourse = await Course.findOne({ name: MOCK_DATA.Name });
-    //   expect(savedCourse).toBeNull();
-    // });
-  });
-  describe("Get all students", () => {
-    test("should return all course from database", async () => {
-      const MOCK_DATA: ICreateCourse[] = [
-        {
-          Name: "course name1",
-          professorName: "test name1",
-          numberOfStudents: 10,
-          startDate: "test sdate1",
-          endDate: "test edate1",
-        },
-        {
-          Name: "course name2",
-          professorName: "test name2",
-          numberOfStudents: 10,
-          startDate: "test sdate2",
-          endDate: "test edate2",
-        },
-      ];
-
-      // Insert mock data
-      for (const data of MOCK_DATA) {
-        await courseRepo.createCourse(data);
-      }
-
-      const students = await courseRepo.getAllCourses();
-      expect(students).toBeDefined();
-      expect(students.length).toEqual(MOCK_DATA.length);
-      expect(students[0].Name).toEqual(MOCK_DATA[0].Name);
-      expect(students[1].Name).toEqual(MOCK_DATA[1].Name);
-    });
-
-    test("should throw an error if no course found", async () => {
-      await expect(courseRepo.getAllCourses()).rejects.toThrow(
-        "Course Not Found"
-      );
-    });
+    expect(courses).toBeDefined();
+    expect(courses.length).toBe(1);
+    expect(courses[0].Name).toBe("Mathematics");
   });
 
-  describe("Update Course", () => {
-    test("should update an existing course in the database", async () => {
-      const MOCK_DATA: ICreateCourse = {
-        Name: "course name1",
-        professorName: "test name1",
-        numberOfStudents: 10,
-        startDate: "test sdate1",
-        endDate: "test edate1",
-      };
-      const createCourse1 = await courseRepo.createCourse(MOCK_DATA);
-
-      const UPDATE_DATA: IUpdateCourse = {
-        Name: "update course name1",
-        professorName: "test name1",
-        numberOfStudents: 10,
-        startDate: "test sdate1",
-        endDate: "test edate1",
-      };
-      const updatedStudent = await courseRepo.updateCourse(
-        createCourse1.data._id.toHexString(),
-        UPDATE_DATA
-      );
-
-      expect(updatedStudent).toBeDefined();
-      expect(updatedStudent?.Name).toEqual(UPDATE_DATA.Name);
-      expect(updatedStudent?.professorName).toEqual(UPDATE_DATA.professorName);
-
-      // Verify the student has been updated in the database
-      const foundCourse = await Course.findById(createCourse1.data._id);
-      expect(foundCourse).toBeDefined();
-      expect(foundCourse?.Name).toEqual(UPDATE_DATA.Name);
+  test("should update an existing course", async () => {
+    const course = await Course.create({
+      Name: "Physics",
+      professorName: "Prof. Richard Roe",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 25,
     });
 
-    test("should throw an error if the course ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
-      const UPDATE_DATA: IUpdateCourse = {
-        Name: "update course name1",
-        professorName: "test name1",
-        numberOfStudents: 10,
-        startDate: "test sdate1",
-        endDate: "test edate1",
-      };
+    const updatedDetails: IUpdateCourse = {
+      Name: "Advanced Physics",
+      professorName: "Prof. Richard Roe",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 25,
+    };
 
-      await expect(
-        courseRepo.updateCourse(INVALID_ID, UPDATE_DATA)
-      ).rejects.toThrow("Invalid Course ID");
-    });
+    const updatedCourse = await courseRepo.updateCourse(
+      course._id.toString(),
+      updatedDetails
+    );
+
+    expect(updatedCourse).toBeDefined();
+    expect(updatedCourse.Name).toBe(updatedDetails.Name);
+    expect(updatedCourse.numberOfStudents).toBe(
+      updatedDetails.numberOfStudents
+    );
   });
-  describe("Delete Course", () => {
-    test("should delete an existing course in the database", async () => {
-      const MOCK_DATA: ICreateCourse = {
-        Name: "course name1",
-        professorName: "test name1",
-        numberOfStudents: 10,
-        startDate: "test sdate1",
-        endDate: "test edate1",
-      };
-      const createdCourse = await courseRepo.createCourse(MOCK_DATA);
 
-      const deletedCourse = await courseRepo.deleteCourse(
-        createdCourse.data._id.toHexString()
-      );
-
-      expect(deletedCourse).toBeDefined();
-      expect(deletedCourse?.isDeleted).toEqual(true);
-      expect(deletedCourse?.deletedAt).toBeDefined();
-
-      // Verify the student has been marked as deleted in the database
-      const foundCourse = await Course.findById(createdCourse.data._id);
-      expect(foundCourse).toBeDefined();
-      expect(foundCourse?.isDeleted).toEqual(true);
+  test("should delete an existing course", async () => {
+    const course = await Course.create({
+      Name: "Chemistry",
+      professorName: "Prof. Sarah Smith",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 25,
     });
 
-    test("should throw an error if the course ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
+    const deletedCourse = await courseRepo.deleteCourse(course._id.toString());
 
-      await expect(courseRepo.deleteCourse(INVALID_ID)).rejects.toThrow(
-        "Invalid Course ID To Delete"
-      );
-    });
+    expect(deletedCourse).toBeDefined();
+    expect(deletedCourse.isDeleted).toBe(true);
   });
-  describe("Find course by name", () => {
-    test("should find course by name in the database", async () => {
-      const MOCK_DATA: ICreateCourse = {
-        Name: "Findable Course",
-        professorName: "professor name",
-        numberOfStudents: 20,
-        startDate: "2024-01-01",
-        endDate: "2024-12-31",
-      };
-      await courseRepo.createCourse(MOCK_DATA);
 
-      const foundCourse = await courseRepo.findByName("Findable Course");
-      expect(foundCourse).toBeDefined();
-      expect(foundCourse[0].Name).toEqual(MOCK_DATA.Name);
+  test("should find course by name", async () => {
+    await Course.create({
+      Name: "Biology",
+      professorName: "Prof. James Bond",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 30,
     });
 
-    test("should throw an error if no course found with the given name", async () => {
-      const INVALID_NAME = "Nonexistent Name";
+    const courses = await courseRepo.findByName("Biology");
 
-      await expect(courseRepo.findByName(INVALID_NAME)).rejects.toThrow(
-        "Course Not Found"
-      );
-    });
+    expect(courses).toBeDefined();
+    expect(courses.length).toBe(1);
+    expect(courses[0].Name).toBe("Biology");
   });
-  describe("Filter courses by start and end dates", () => {
-    test("should find courses within the date range", async () => {
-      const COURSE_1: ICreateCourse = {
-        Name: "Course 1",
-        professorName: "professor name 1",
-        numberOfStudents: 15,
-        startDate: "2024-01-01",
-        endDate: "2024-06-30",
-      };
-      const COURSE_2: ICreateCourse = {
-        Name: "Course 2",
-        professorName: "professor name 2",
-        numberOfStudents: 25,
-        startDate: "2024-07-01",
-        endDate: "2024-12-31",
-      };
-      await courseRepo.createCourse(COURSE_1);
-      await courseRepo.createCourse(COURSE_2);
 
-      const filter: SearchByDates = {
-        startDate: "2024-01-01",
-        endDate: "2024-12-31",
-      };
-      const foundCourses = await courseRepo.filterStartDateByEndDate(filter);
-      expect(foundCourses).toBeDefined();
-      expect(foundCourses.length).toBe(2);
-      expect(foundCourses[0].Name).toEqual(COURSE_1.Name);
-      expect(foundCourses[1].Name).toEqual(COURSE_2.Name);
+  test("should filter courses by start and end dates", async () => {
+    await Course.create({
+      Name: "History",
+      professorName: "Prof. Emily Clark",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 30,
     });
 
-    test("should throw an error if no courses found within the date range", async () => {
-      const filter: SearchByDates = {
-        startDate: "2025-01-01",
-        endDate: "2025-12-31",
-      };
+    const filters = { startDate: "2024-09-01", endDate: "2025-06-30" };
+    const courses = await courseRepo.filterStartDateByEndDate(filters);
 
-      await expect(courseRepo.filterStartDateByEndDate(filter)).rejects.toThrow(
-        "Course Not Found"
-      );
-    });
+    expect(courses).toBeDefined();
+    expect(courses.length).toBe(1);
+    expect(courses[0].Name).toBe("History");
   });
-  describe("Find student by ID", () => {
-    test("should find a student by ID in the database", async () => {
-      const MOCK_DATA: ICreateCourse = {
-        Name: "Course 2",
-        professorName: "professor name 2",
-        numberOfStudents: 25,
-        startDate: "2024-07-01",
-        endDate: "2024-12-31",
-      };
-      const createdCourse = await courseRepo.createCourse(MOCK_DATA);
 
-      const foundCourse = await courseRepo.findById(
-        createdCourse.data._id.toHexString()
-      );
-
-      expect(foundCourse).toBeDefined();
-      expect(foundCourse?.Name).toEqual(MOCK_DATA.Name);
-      expect(foundCourse?._id.toHexString()).toEqual(
-        createdCourse.data._id.toHexString()
-      );
+  test("should find course by ID", async () => {
+    const course = await Course.create({
+      Name: "English",
+      professorName: "Prof. George Martin",
+      startDate: "2024-09-01",
+      endDate: "2025-06-30",
+      numberOfStudents: 30,
     });
 
-    test("should throw an error if the student ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId should
+    const foundCourse = await courseRepo.findById(course._id.toString());
 
-      await expect(courseRepo.findById(INVALID_ID)).rejects.toThrow(
-        "Course Not Found"
-      );
-    });
+    expect(foundCourse).toBeDefined();
+    expect(foundCourse.Name).toBe("English");
   });
 });

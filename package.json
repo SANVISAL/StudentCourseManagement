@@ -23,7 +23,9 @@
   "scripts": {
     "start:dev": "nodemon src/server.ts",
     "test": "jest",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "docker start school_management_container",
+    "stop" : "docker stop school_management_container"
   },
   "devDependencies": {
     "@types/chai": "^4.3.16",

@@ -1,19 +1,34 @@
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import StudentRepository from "../../repository/student.repository"; // Adjust the path to your repository
 import { Student } from "../../model/student.model"; // Adjust the path to your Student model
 import {
   ICreateStudent,
   IUpdateStudent,
 } from "../../repository/@types/student.repository.type"; // Adjust the path to your interfaces
-// import DuplicateError from "../../../errors/duplicate-error";
+import DuplicateError from "../../../errors/duplicate-error";
+import { ApiError, NotFoundError } from "../../../errors/api-error";
 
-jest.mock("../../model/student.model");
-
-describe("Student repository unit test", () => {
+describe("Student repository integration test", () => {
   let studentRepo: StudentRepository;
+  let mongoServer: MongoMemoryServer;
+
+  beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
 
   beforeEach(() => {
     studentRepo = new StudentRepository();
-    jest.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await Student.deleteMany({});
   });
 
   describe("Create student profile", () => {
@@ -26,19 +41,17 @@ describe("Student repository unit test", () => {
         phoneNumber: "1234567890",
       };
 
-      const savedStudent = {
-        ...MOCK_DATA,
-        _id: "some-id",
-      };
-
-      (Student.prototype.save as jest.Mock).mockResolvedValue(savedStudent);
-
       const newStudent = await studentRepo.createStudent(MOCK_DATA);
 
       expect(newStudent).toBeDefined();
       expect(newStudent.data.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
       expect(newStudent.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
-      expect(Student.prototype.save).toHaveBeenCalledTimes(1);
+
+      const studentInDb = await Student.findOne({
+        phoneNumber: MOCK_DATA.phoneNumber,
+      });
+      expect(studentInDb).not.toBeNull();
+      expect(studentInDb?.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
     });
 
     test("should not create a student with existing phone number", async () => {
@@ -50,54 +63,13 @@ describe("Student repository unit test", () => {
         phoneNumber: "1234567890",
       };
 
-      (Student.findOne as jest.Mock).mockResolvedValue(MOCK_DATA);
+      await studentRepo.createStudent(MOCK_DATA);
 
       await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(
-        "Student Already Exist"
+        DuplicateError
       );
     });
   });
-
-  // describe('createStudent', () => {
-  //   test('should add new student profile to database', async () => {
-  //     const MOCK_DATA: ICreateStudent = {
-  //       fullNameEn: 'John Doe',
-  //       fullNameKh: 'សាន​ វិសាល',
-  //       dateOfBirth: '1990-01-01',
-  //       gender: 'Male',
-  //       phoneNumber: '1234567890',
-  //     };
-
-  //     const result = await studentRepo.createStudent(MOCK_DATA);
-
-  //     expect(result).toBeDefined();
-  //     expect(result.message).toEqual('Student created successfully');
-  //     expect(result.data.phoneNumber).toEqual(MOCK_DATA.phoneNumber);
-
-  //     const studentInDb = await Student.findOne({ phoneNumber: MOCK_DATA.phoneNumber });
-  //     expect(studentInDb).not.toBeNull();
-  //     expect(studentInDb.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
-  //   });
-
-  //   test('should not create a student with existing phone number', async () => {
-  //     const MOCK_DATA: ICreateStudent = {
-  //       fullNameEn: 'John Doe',
-  //       fullNameKh: 'សាន​ វិសាល',
-  //       dateOfBirth: '1990-01-01',
-  //       gender: 'Male',
-  //       phoneNumber: '1234567890',
-  //     };
-
-  //     // Pre-insert a student with the same phone number
-  //     const existingStudent = new Student(MOCK_DATA);
-  //     await existingStudent.save();
-
-  //     await expect(studentRepo.createStudent(MOCK_DATA)).rejects.toThrow(DuplicateError);
-
-  //     const studentCount = await Student.countDocuments({ phoneNumber: MOCK_DATA.phoneNumber });
-  //     expect(studentCount).toBe(1); // Ensure only one student exists with the given phone number
-  //   });
-  // });
 
   describe("Get all students", () => {
     test("should return all students from database", async () => {
@@ -113,14 +85,14 @@ describe("Student repository unit test", () => {
           fullNameEn: "Jane Smith",
           fullNameKh: "សាន​ វិសាល",
           dateOfBirth: "1990-01-01",
-          gender: "Male",
+          gender: "Female",
           phoneNumber: "0987654321",
         },
       ];
 
-      (Student.find as jest.Mock).mockResolvedValue(MOCK_DATA);
+      await Student.insertMany(MOCK_DATA);
 
-      const students = await studentRepo.getAllStudnet();
+      const students = await studentRepo.getAllStudents();
 
       expect(students).toBeDefined();
       expect(students.length).toEqual(MOCK_DATA.length);
@@ -129,11 +101,7 @@ describe("Student repository unit test", () => {
     });
 
     test("should throw an error if no students found", async () => {
-      (Student.find as jest.Mock).mockResolvedValue([]);
-
-      await expect(studentRepo.getAllStudnet()).rejects.toThrow(
-        "Student Not Found"
-      );
+      await expect(studentRepo.getAllStudents()).rejects.toThrow(ApiError);
     });
   });
 
@@ -143,25 +111,17 @@ describe("Student repository unit test", () => {
         fullNameEn: "Jane Smith",
         fullNameKh: "សាន​ វិសាល",
         dateOfBirth: "1990-01-01",
-        gender: "Male",
+        gender: "Female",
         phoneNumber: "0987654321",
       };
-      const savedStudent = {
-        ...MOCK_DATA,
-        _id: "some-id",
-      };
-
-      (Student.findById as jest.Mock).mockResolvedValue(savedStudent);
-      (Student.findByIdAndUpdate as jest.Mock).mockResolvedValue({
-        ...savedStudent,
-        fullNameEn: "San Visal",
-      });
+      const savedStudent = new Student(MOCK_DATA);
+      await savedStudent.save();
 
       const UPDATE_DATA: IUpdateStudent = {
         fullNameEn: "San Visal",
         fullNameKh: "សាន​ វិសាល",
         dateOfBirth: "1990-01-01",
-        gender: "Male",
+        gender: "Female",
         phoneNumber: "0987654321",
       };
 
@@ -173,24 +133,21 @@ describe("Student repository unit test", () => {
       expect(updatedStudent).toBeDefined();
       expect(updatedStudent?.fullNameEn).toEqual(UPDATE_DATA.fullNameEn);
       expect(updatedStudent?.phoneNumber).toEqual(UPDATE_DATA.phoneNumber);
-      expect(Student.findByIdAndUpdate).toHaveBeenCalledTimes(1);
     });
 
     test("should throw an error if the student ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
+      const INVALID_ID = new mongoose.Types.ObjectId().toHexString();
       const UPDATE_DATA: IUpdateStudent = {
         fullNameEn: "San Visal",
         fullNameKh: "សាន​ វិសាល",
         dateOfBirth: "1990-01-01",
-        gender: "Male",
+        gender: "Female",
         phoneNumber: "0987654321",
       };
 
-      (Student.findById as jest.Mock).mockResolvedValue(null);
-
       await expect(
         studentRepo.updateStudent(INVALID_ID, UPDATE_DATA)
-      ).rejects.toThrow("Invalid Student ID");
+      ).rejects.toThrow(ApiError);
     });
   });
 
@@ -200,21 +157,11 @@ describe("Student repository unit test", () => {
         fullNameEn: "Jane Smith",
         fullNameKh: "សាន​ វិសាល",
         dateOfBirth: "1990-01-01",
-        gender: "Male",
+        gender: "Female",
         phoneNumber: "0987654321",
       };
-      const savedStudent = {
-        ...MOCK_DATA,
-        _id: "some-id",
-        isDeleted: false,
-      };
-
-      (Student.findById as jest.Mock).mockResolvedValue(savedStudent);
-      (Student.findByIdAndUpdate as jest.Mock).mockResolvedValue({
-        ...savedStudent,
-        isDeleted: true,
-        deletedAt: new Date(),
-      });
+      const savedStudent = new Student(MOCK_DATA);
+      await savedStudent.save();
 
       const deletedStudent = await studentRepo.deleteStudent(
         savedStudent._id as string
@@ -223,16 +170,16 @@ describe("Student repository unit test", () => {
       expect(deletedStudent).toBeDefined();
       expect(deletedStudent?.isDeleted).toEqual(true);
       expect(deletedStudent?.deletedAt).toBeDefined();
-      expect(Student.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+
+      const studentInDb = await Student.findById(savedStudent._id);
+      expect(studentInDb?.isDeleted).toEqual(true);
     });
 
     test("should throw an error if the student ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
-
-      (Student.findById as jest.Mock).mockResolvedValue(null);
+      const INVALID_ID = new mongoose.Types.ObjectId().toHexString();
 
       await expect(studentRepo.deleteStudent(INVALID_ID)).rejects.toThrow(
-        "Invalid Student ID To Delete"
+        ApiError
       );
     });
   });
@@ -241,22 +188,22 @@ describe("Student repository unit test", () => {
     test("should find students by name in the database", async () => {
       const MOCK_DATA: ICreateStudent[] = [
         {
-          fullNameEn: "Jane john",
+          fullNameEn: "Jane John",
           fullNameKh: "សាន​ វិសាល",
           dateOfBirth: "1990-01-01",
-          gender: "Male",
+          gender: "Female",
           phoneNumber: "0987654320",
         },
         {
           fullNameEn: "Jane Smith",
           fullNameKh: "សាន​ វិសាល",
           dateOfBirth: "1990-01-01",
-          gender: "Male",
+          gender: "Female",
           phoneNumber: "0987654321",
         },
       ];
 
-      (Student.find as jest.Mock).mockResolvedValue(MOCK_DATA);
+      await Student.insertMany(MOCK_DATA);
 
       const searchName = "Jane Smith";
       const foundStudents = await studentRepo.findByName(searchName);
@@ -264,16 +211,13 @@ describe("Student repository unit test", () => {
       expect(foundStudents).toBeDefined();
       expect(foundStudents.length).toEqual(1);
       expect(foundStudents[0].fullNameEn).toEqual(searchName);
-      expect(Student.find).toHaveBeenCalledTimes(1);
     });
 
     test("should throw an error if no students found with the given name", async () => {
       const INVALID_NAME = "Nonexistent Name";
 
-      (Student.find as jest.Mock).mockResolvedValue([]);
-
       await expect(studentRepo.findByName(INVALID_NAME)).rejects.toThrow(
-        "Student Not Found"
+        ApiError
       );
     });
   });
@@ -281,18 +225,14 @@ describe("Student repository unit test", () => {
   describe("Find student by ID", () => {
     test("should find a student by ID in the database", async () => {
       const MOCK_DATA: ICreateStudent = {
-        fullNameEn: "Jane john",
+        fullNameEn: "Jane John",
         fullNameKh: "សាន​ វិសាល",
         dateOfBirth: "1990-01-01",
-        gender: "Male",
+        gender: "Female",
         phoneNumber: "0987654320",
       };
-      const savedStudent = {
-        ...MOCK_DATA,
-        _id: "some-id",
-      };
-
-      (Student.findById as jest.Mock).mockResolvedValue(savedStudent);
+      const savedStudent = new Student(MOCK_DATA);
+      await savedStudent.save();
 
       const foundStudent = await studentRepo.findById(
         savedStudent._id as string
@@ -300,17 +240,14 @@ describe("Student repository unit test", () => {
 
       expect(foundStudent).toBeDefined();
       expect(foundStudent?.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
-      expect(foundStudent?._id as string).toEqual(savedStudent._id as string);
-      expect(Student.findById).toHaveBeenCalledTimes(1);
+      expect(foundStudent?._id.toString()).toEqual(savedStudent._id.toString());
     });
 
     test("should throw an error if the student ID does not exist", async () => {
-      const INVALID_ID = "000000000000000000000000"; // An invalid ObjectId
-
-      (Student.findById as jest.Mock).mockResolvedValue(null);
+      const INVALID_ID = new mongoose.Types.ObjectId().toHexString();
 
       await expect(studentRepo.findById(INVALID_ID)).rejects.toThrow(
-        "Student Not Found"
+        ApiError
       );
     });
   });
