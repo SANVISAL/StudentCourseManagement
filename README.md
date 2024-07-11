@@ -186,3 +186,7 @@ This project implements a **Student Course Management system** using **Express**
    ```bash
    yarn test
    ```
+3. **Run Project**:
+   ```bash
+   yarn start:dev
+   ```
