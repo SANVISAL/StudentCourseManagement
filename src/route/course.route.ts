@@ -97,7 +97,7 @@ courseRoute.get(
     const name = req.query.name;
     // if (!name) {
     //   return res.status(400).json({ message: "Name parameter is required." });
-    // }
+    // }11
     try {
       const course = await courseController.findByName(name.toString());
       if (course) {
