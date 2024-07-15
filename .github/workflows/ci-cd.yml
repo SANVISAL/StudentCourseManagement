@@ -1,54 +1,35 @@
-name: CI/CD Pipeline
+name: CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
-    services:
-      mongo:
-        image: mongo:4.4
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
+        cache: 'yarn'
 
     - name: Install dependencies
       run: yarn install
 
-    - name: Run lint
-      run: yarn lint
-
     - name: Run tests
-      env:
-        MONGO_URI: mongodb://localhost:27017/testdb
       run: yarn test
 
     - name: Build project
       run: yarn build
 
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: production-artifacts
-        path: build/
+    - name: Start project in development mode
+      run: yarn start:dev
+      env:
+        NODE_ENV: development

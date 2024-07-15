@@ -25,7 +25,6 @@ courseRoute.post(
       }
     } catch (err: any) {
       console.error("Route Error:", err);
-      // res.status(500).json({ message: "Internal Server Error" });
       next(err);
     }
   }
