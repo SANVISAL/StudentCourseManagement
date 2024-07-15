@@ -16,7 +16,7 @@ class CourseRepository {
   async createCourse(courseDetails: ICreateCourse) {
     try {
       if (!courseDetails.Name || !courseDetails.professorName) {
-        throw new MissingReqirement("Missing required student details");
+        throw new MissingReqirement("Missing required cuurse details");
       }
 
       const course = new Course(courseDetails);

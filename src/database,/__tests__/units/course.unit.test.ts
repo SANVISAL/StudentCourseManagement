@@ -24,12 +24,13 @@ describe("CourseRepository Unit Tests", () => {
       numberOfStudents: 30,
     };
 
-    (Course.create as jest.Mock).mockResolvedValue(courseDetails);
+    Course.prototype.save = jest.fn().mockResolvedValue(courseDetails);
 
     const result = await courseRepo.createCourse(courseDetails);
 
     expect(result).toBeDefined();
-    expect(result.data.Name).toBe(courseDetails.Name);
+    expect(result.data).toBeDefined();
+    expect(result.data.Name || undefined).toBe(courseDetails.Name ||undefined);
     expect(result.data.professorName).toBe(courseDetails.professorName);
   });
 
@@ -55,10 +56,7 @@ describe("CourseRepository Unit Tests", () => {
       numberOfStudents: 30,
     };
 
-    (Course.create as jest.Mock).mockResolvedValue({
-      ...courseDetails,
-      save: jest.fn().mockResolvedValue(null),
-    });
+    Course.prototype.save = jest.fn().mockResolvedValue(null);
 
     await expect(courseRepo.createCourse(courseDetails)).rejects.toThrow(
       "Course Creation Failed"

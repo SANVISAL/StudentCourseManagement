@@ -31,7 +31,7 @@ describe("Student repository unit test", () => {
         phoneNumber: "1234567890",
       };
 
-      (Student.create as jest.Mock).mockResolvedValue(MOCK_DATA);
+      Student.prototype.save = jest.fn().mockResolvedValue(MOCK_DATA);
 
       const newStudent = await studentRepo.createStudent(MOCK_DATA);
       
@@ -246,7 +246,7 @@ describe("Student repository unit test", () => {
       );
 
       expect(foundStudent).toBeDefined();
-      expect(foundStudent.fullNameEn).toEqual(MOCK_DATA.fullNameEn);
+      expect(foundStudent.fullNameEn).toEqual(MOCK_DATA.fullNameEn || undefined);
       expect(foundStudent._id.toString()).toEqual(savedStudent._id.toString());
     });
 
