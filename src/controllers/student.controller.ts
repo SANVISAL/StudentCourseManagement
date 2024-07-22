@@ -55,6 +55,7 @@ class StudentController {
       throw err
     }
   }
+  //
   async findById(id: string) {
     try {
       const result = await this.studentService.findById(id);;
